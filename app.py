@@ -220,6 +220,10 @@ def members():
 
 
 
+@app.route('/test')
+def test():
+    return "<h1>서버가 정상 작동 중입니다!</h1><p>이 페이지가 보인다면 Flask 앱이 잘 실행되고 있습니다.</p>"
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
