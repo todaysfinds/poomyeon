@@ -12,4 +12,6 @@ def test():
     return "<h1>테스트 성공!</h1>"
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000))) 
+    port = int(os.environ.get('PORT', 10000))
+    print(f"Starting server on port {port}")
+    app.run(host='0.0.0.0', port=port) 
