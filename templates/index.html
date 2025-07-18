@@ -100,6 +100,39 @@
                           placeholder="책에 대한 한줄평을 남겨주세요"></textarea>
             </div>
 
+            <!-- 키워드 생성 버튼 -->
+            <div>
+                <button type="button" id="generate-keywords-btn"
+                        class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
+                    🎯 토론 키워드 생성하기
+                </button>
+            </div>
+
+            <!-- 키워드 표시 영역 -->
+            <div id="keywords-section" class="hidden">
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                    <h4 class="text-sm font-semibold text-purple-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                        💬 독서모임 토론 키워드
+                    </h4>
+                    <div id="keywords-container" class="flex flex-wrap gap-2">
+                        <!-- 키워드들이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                    <div id="keywords-loading" class="hidden text-center py-4">
+                        <div class="inline-flex items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-purple-700">키워드 생성 중...</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-purple-600 mt-2">
+                        💡 이 키워드들은 독서모임에서 토론할 때 참고용으로 사용하세요. Notion에는 저장되지 않습니다.
+                    </p>
+                </div>
+            </div>
+
             <!-- 제출 버튼 -->
             <div>
                 <button type="submit"
@@ -153,4 +186,102 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generate-keywords-btn');
+    const keywordsSection = document.getElementById('keywords-section');
+    const keywordsContainer = document.getElementById('keywords-container');
+    const keywordsLoading = document.getElementById('keywords-loading');
+    
+    generateBtn.addEventListener('click', function() {
+        // 폼 데이터 수집
+        const title = document.getElementById('title').value.trim();
+        const author = document.getElementById('author').value.trim();
+        const genre = document.getElementById('genre').value;
+        const review = document.getElementById('review').value.trim();
+        
+        // 유효성 검사
+        if (!title) {
+            alert('책 제목을 입력해주세요.');
+            document.getElementById('title').focus();
+            return;
+        }
+        
+        if (!genre) {
+            alert('장르를 선택해주세요.');
+            document.getElementById('genre').focus();
+            return;
+        }
+        
+        // 로딩 상태 표시
+        keywordsSection.classList.remove('hidden');
+        keywordsLoading.classList.remove('hidden');
+        keywordsContainer.innerHTML = '';
+        generateBtn.disabled = true;
+        generateBtn.textContent = '생성 중...';
+        
+        // API 요청
+        fetch('/generate_keywords', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                author: author,
+                genre: genre,
+                review: review
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            keywordsLoading.classList.add('hidden');
+            
+            if (data.success) {
+                // 키워드 표시
+                keywordsContainer.innerHTML = '';
+                data.keywords.forEach(keyword => {
+                    const keywordBadge = document.createElement('span');
+                    keywordBadge.className = 'inline-block bg-purple-100 text-purple-800 text-sm font-medium px-3 py-1 rounded-full border border-purple-200';
+                    keywordBadge.textContent = keyword;
+                    keywordsContainer.appendChild(keywordBadge);
+                });
+                
+                // 성공 메시지 (선택적)
+                if (data.message) {
+                    // 임시로 버튼 텍스트를 성공 메시지로 변경
+                    generateBtn.textContent = '✓ ' + data.message;
+                    setTimeout(() => {
+                        generateBtn.textContent = '🎯 토론 키워드 생성하기';
+                    }, 2000);
+                }
+            } else {
+                // 에러 처리
+                keywordsContainer.innerHTML = `
+                    <div class="text-red-600 text-sm p-2 bg-red-50 rounded border border-red-200">
+                        ${data.error || '키워드 생성에 실패했습니다.'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            keywordsLoading.classList.add('hidden');
+            keywordsContainer.innerHTML = `
+                <div class="text-red-600 text-sm p-2 bg-red-50 rounded border border-red-200">
+                    네트워크 오류가 발생했습니다. 다시 시도해주세요.
+                </div>
+            `;
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            generateBtn.disabled = false;
+            if (generateBtn.textContent === '생성 중...') {
+                generateBtn.textContent = '🎯 토론 키워드 생성하기';
+            }
+        });
+    });
+});
+</script>
+
 {% endblock %} 
