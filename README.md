@@ -13,7 +13,7 @@ Flask 기반의 독서모임 진행과 기록을 도와주는 웹 애플리케�
 ## 🛠 기술 스택
 
 - **Backend**: Flask, SQLAlchemy
-- **Database**: SQLite (개발) / PostgreSQL (배포)
+- **Database**: SQLite
 - **Frontend**: HTML, Tailwind CSS
 - **API**: Notion API
 - **Deploy**: Render
@@ -90,11 +90,10 @@ Render 대시보드에서 다음 환경변수를 설정하세요:
 - `FLASK_ENV`: production
 - `NOTION_TOKEN`: Notion Integration 토큰
 - `NOTION_DATABASE_ID`: Notion 데이터베이스 ID
-- `DATABASE_URL`: 자동 생성됨 (PostgreSQL)
 
 ### 3. 배포
 - `render.yaml` 파일이 자동으로 배포 설정을 처리합니다
-- PostgreSQL 데이터베이스가 자동으로 생성됩니다
+- SQLite 데이터베이스가 자동으로 생성됩니다
 
 ## 📁 프로젝트 구조
 

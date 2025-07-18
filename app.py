@@ -12,15 +12,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
-# Database configuration
-if os.getenv('DATABASE_URL'):
-    # Production - PostgreSQL
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-    if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
-        app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
-else:
-    # Development - SQLite
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookclub.db'
+# Database configuration - SQLite only
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookclub.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -180,18 +173,28 @@ def health():
 
 # Initialize database
 def init_db():
-    with app.app_context():
-        db.create_all()
-        
-        # Add initial members if none exist
-        if Member.query.count() == 0:
-            initial_members = ['김철수', '이영희', '박민수', '최유진']
-            for name in initial_members:
-                member = Member(name=name)
-                db.session.add(member)
-            db.session.commit()
-            print("Initial members added to database")
+    """Initialize database and create tables"""
+    try:
+        with app.app_context():
+            # Create all tables
+            db.create_all()
+            print("Database tables created successfully")
+            
+            # Add initial members if none exist
+            if Member.query.count() == 0:
+                initial_members = ['김철수', '이영희', '박민수', '최유진']
+                for name in initial_members:
+                    member = Member(name=name)
+                    db.session.add(member)
+                db.session.commit()
+                print("Initial members added to database")
+            else:
+                print(f"Database already has {Member.query.count()} members")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+
+# Initialize database when the module is imported
+init_db()
 
 if __name__ == '__main__':
-    init_db()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=os.getenv('FLASK_ENV') == 'development') 
