@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}책 기록 - 독서모임{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- 책 기록 폼 -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">📖 새 책 기록하기</h2>
+        
+        <form action="{{ url_for('add_book') }}" method="POST" class="space-y-6">
+            <!-- 회원 선택 -->
+            <div>
+                <label for="member_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    회원 이름 *
+                </label>
+                <select name="member_name" id="member_name" required 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                    <option value="">회원을 선택하세요</option>
+                    {% for member in members %}
+                        <option value="{{ member.name }}">{{ member.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 책 제목 -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                    책 제목 *
+                </label>
+                <input type="text" name="title" id="title" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                       placeholder="책 제목을 입력하세요">
+            </div>
+
+            <!-- 저자 -->
+            <div>
+                <label for="author" class="block text-sm font-medium text-gray-700 mb-2">
+                    저자 *
+                </label>
+                <input type="text" name="author" id="author" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                       placeholder="저자를 입력하세요">
+            </div>
+
+            <!-- 장르 -->
+            <div>
+                <label for="genre" class="block text-sm font-medium text-gray-700 mb-2">
+                    장르 *
+                </label>
+                <select name="genre" id="genre" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                    <option value="">장르를 선택하세요</option>
+                    <option value="소설">소설</option>
+                    <option value="에세이">에세이</option>
+                    <option value="자기계발">자기계발</option>
+                    <option value="경제/경영">경제/경영</option>
+                    <option value="역사">역사</option>
+                    <option value="과학">과학</option>
+                    <option value="철학">철학</option>
+                    <option value="예술">예술</option>
+                    <option value="기타">기타</option>
+                </select>
+            </div>
+
+            <!-- 완독 여부 -->
+            <div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="completed" id="completed"
+                           class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <label for="completed" class="ml-2 block text-sm text-gray-700">
+                        완독했습니다
+                    </label>
+                </div>
+            </div>
+
+            <!-- 별점 -->
+            <div>
+                <label for="rating" class="block text-sm font-medium text-gray-700 mb-2">
+                    별점 (1-5)
+                </label>
+                <select name="rating" id="rating"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                    <option value="">별점을 선택하세요</option>
+                    <option value="1">⭐ 1점</option>
+                    <option value="2">⭐⭐ 2점</option>
+                    <option value="3">⭐⭐⭐ 3점</option>
+                    <option value="4">⭐⭐⭐⭐ 4점</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5점</option>
+                </select>
+            </div>
+
+            <!-- 한줄평 -->
+            <div>
+                <label for="review" class="block text-sm font-medium text-gray-700 mb-2">
+                    한줄평
+                </label>
+                <textarea name="review" id="review" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                          placeholder="책에 대한 한줄평을 남겨주세요"></textarea>
+            </div>
+
+            <!-- 제출 버튼 -->
+            <div>
+                <button type="submit"
+                        class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition duration-200">
+                    📝 Notion에 기록하기
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 정보 및 안내 -->
+    <div class="space-y-6">
+        <!-- Notion 연동 상태 -->
+        <div class="bg-blue-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">🔗 Notion 연동 안내</h3>
+            <div class="text-sm text-blue-800 space-y-2">
+                <p>• 입력한 책 정보가 자동으로 Notion 데이터베이스에 기록됩니다</p>
+                <p>• 이름은 드롭다운에서 선택한 값이 그대로 저장됩니다</p>
+                <p>• 모든 항목이 정확히 입력되었는지 확인해주세요</p>
+            </div>
+        </div>
+
+        <!-- 회원 목록 -->
+        <div class="bg-green-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-green-900 mb-3">👥 등록된 회원</h3>
+            <div class="space-y-1">
+                {% for member in members %}
+                    <div class="text-sm text-green-800 flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        {{ member.name }}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4">
+                <a href="{{ url_for('members') }}" 
+                   class="text-sm text-green-700 hover:text-green-900 underline">
+                    회원 추가하기 →
+                </a>
+            </div>
+        </div>
+
+        <!-- 사용법 -->
+        <div class="bg-gray-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">📋 사용법</h3>
+            <div class="text-sm text-gray-700 space-y-2">
+                <p><strong>1단계:</strong> 드롭다운에서 회원 이름 선택</p>
+                <p><strong>2단계:</strong> 책 정보 입력 (제목, 저자, 장르 필수)</p>
+                <p><strong>3단계:</strong> 완독 여부, 별점, 한줄평 작성</p>
+                <p><strong>4단계:</strong> "Notion에 기록하기" 버튼 클릭</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
