@@ -108,14 +108,49 @@ def add_book_to_notion(book_data):
     except Exception as e:
         return False, f"Error connecting to Notion: {str(e)}"
 
+# Database check function
+def ensure_database():
+    """Ensure database tables exist"""
+    try:
+        # Test if tables exist by trying to query
+        Member.query.count()
+        return True
+    except:
+        # Tables don't exist, create them
+        try:
+            db.create_all()
+            print("Database tables created")
+            return True
+        except Exception as e:
+            print(f"Failed to create database tables: {e}")
+            return False
+
 # Routes
 @app.route('/')
 def index():
-    members = Member.query.all()
+    if not ensure_database():
+        return "Database initialization failed", 500
+    
+    try:
+        members = Member.query.all()
+        # If no members exist, add a default one to avoid empty dropdown
+        if not members:
+            default_member = Member(name='기본회원')
+            db.session.add(default_member)
+            db.session.commit()
+            members = [default_member]
+    except Exception as e:
+        print(f"Error querying members: {e}")
+        return "Database error", 500
+    
     return render_template('index.html', members=members)
 
 @app.route('/add_book', methods=['POST'])
 def add_book():
+    if not ensure_database():
+        flash('데이터베이스 오류가 발생했습니다.', 'error')
+        return redirect(url_for('index'))
+    
     try:
         # Get form data
         book_data = {
@@ -142,6 +177,10 @@ def add_book():
 
 @app.route('/add_member', methods=['POST'])
 def add_member():
+    if not ensure_database():
+        flash('데이터베이스 오류가 발생했습니다.', 'error')
+        return redirect(url_for('index'))
+    
     try:
         name = request.form['name'].strip()
         if name:
@@ -162,7 +201,21 @@ def add_member():
 
 @app.route('/members')
 def members():
-    members = Member.query.all()
+    if not ensure_database():
+        return "Database initialization failed", 500
+    
+    try:
+        members = Member.query.all()
+        # If no members exist, add a default one
+        if not members:
+            default_member = Member(name='기본회원')
+            db.session.add(default_member)
+            db.session.commit()
+            members = [default_member]
+    except Exception as e:
+        print(f"Error querying members: {e}")
+        return "Database error", 500
+    
     return render_template('members.html', members=members)
 
 
@@ -175,26 +228,15 @@ def health():
 def init_db():
     """Initialize database and create tables"""
     try:
-        with app.app_context():
-            # Create all tables
-            db.create_all()
-            print("Database tables created successfully")
-            
-            # Add initial members if none exist
-            if Member.query.count() == 0:
-                initial_members = ['김철수', '이영희', '박민수', '최유진']
-                for name in initial_members:
-                    member = Member(name=name)
-                    db.session.add(member)
-                db.session.commit()
-                print("Initial members added to database")
-            else:
-                print(f"Database already has {Member.query.count()} members")
+        db.create_all()
+        print("Database tables created successfully")
     except Exception as e:
         print(f"Error initializing database: {e}")
-
-# Initialize database when the module is imported
-init_db()
+        return False
+    return True
 
 if __name__ == '__main__':
+    # Initialize database for local development
+    with app.app_context():
+        init_db()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=os.getenv('FLASK_ENV') == 'development') 
